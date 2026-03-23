@@ -3,41 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N-Reinas Evolutivo | AI</title>
+    <title>N-Reinas | Inteligencia Artificial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-    <div class="contenedor">
-        <div class="panel-control">
-            <h2>⚙️ Configuración Evolutiva</h2>
-            
-            <div class="grupo-input">
-                <label for="n_reinas">Tamaño del Tablero (N):</label>
-                <input type="number" id="n_reinas" value="8" min="4" max="20">
-            </div>
+<body class="bg-dark text-light">
 
-            <div class="grupo-input">
-                <label for="poblacion">Tamaño de la Población:</label>
-                <input type="number" id="poblacion" value="100" min="10" step="10">
-            </div>
-
-            <div class="grupo-input">
-                <label for="mutacion">Tasa de Mutación (0 a 1):</label>
-                <input type="number" id="mutacion" value="0.1" min="0.01" max="1" step="0.05">
-            </div>
-
-            <button id="btn-resolver" class="btn-principal">🚀 Resolver con IA</button>
-
-            <div id="caja-resultados" class="oculto">
-                <h3>Resultados:</h3>
-                <p id="texto-estado"></p>
-                <p id="texto-generaciones"></p>
-            </div>
+    <div class="container-fluid py-4">
+        <div class="row text-center mb-4">
+            <h1 class="fw-bold text-danger">Módulo Evolutivo: N-Reinas</h1>
+            <p class="text-secondary">Resolución mediante Algoritmos Basados en Población</p>
+            <p class="text-secondary small mb-3">By: Juanca G.G      2026</p>
         </div>
 
-        <div class="panel-tablero">
-            <div id="tablero-contenedor">
+        <div class="row justify-content-center">
+            <div class="col-lg-3 col-md-5 mb-4">
+                <div class="card bg-black border-secondary shadow-lg">
+                    <div class="card-header border-secondary text-center">
+                        <h5 class="mb-0 text-white">⚙️ Parámetros</h5>
+                    </div>
+                    <div class="card-body text-secondary">
+                        <div class="mb-3">
+                            <label for="n_reinas" class="form-label text-light">Tamaño del Tablero (N):</label>
+                            <input type="number" id="n_reinas" class="form-control bg-dark text-light border-secondary" value="8" min="4" max="20">
+                        </div>
+                        <div class="mb-3">
+                            <label for="poblacion" class="form-label text-light">Tamaño de la Población:</label>
+                            <input type="number" id="poblacion" class="form-control bg-dark text-light border-secondary" value="100" min="10" step="10">
+                        </div>
+                        <div class="mb-4">
+                            <label for="mutacion" class="form-label text-light">Tasa de Mutación (0 a 1):</label>
+                            <input type="number" id="mutacion" class="form-control bg-dark text-light border-secondary" value="0.1" min="0.01" max="1" step="0.05">
+                        </div>
+                        
+                        <button id="btn-resolver" class="btn btn-danger w-100 fw-bold">🚀 Ejecutar IA</button>
+                    </div>
                 </div>
+
+                <div id="alerta-resultados" class="alert mt-3 d-none text-center" role="alert">
+                    <h6 id="texto-estado" class="fw-bold mb-1"></h6>
+                    <small id="texto-generaciones"></small>
+                </div>
+            </div>
+
+            <div class="col-lg-8 col-md-7 d-flex justify-content-center align-items-start">
+                <div class="card bg-black border-secondary shadow-lg p-3 overflow-auto w-100 d-flex justify-content-center align-items-center">
+                    <div id="tablero-contenedor"></div>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -1,22 +1,20 @@
 document.addEventListener("DOMContentLoaded", () => {
     const btnResolver = document.getElementById('btn-resolver');
     const contenedorTablero = document.getElementById('tablero-contenedor');
-    const cajaResultados = document.getElementById('caja-resultados');
+    const alertaResultados = document.getElementById('alerta-resultados');
     const textoEstado = document.getElementById('texto-estado');
     const textoGeneraciones = document.getElementById('texto-generaciones');
 
     btnResolver.addEventListener('click', async () => {
-        // 1. Recoger los valores del usuario
         const n_reinas = parseInt(document.getElementById('n_reinas').value);
         const tamaño_poblacion = parseInt(document.getElementById('poblacion').value);
         const tasa_mutacion = parseFloat(document.getElementById('mutacion').value);
 
-        // Cambiar el texto del botón mientras piensa
-        btnResolver.innerText = "⏳ Evolucionando...";
+        btnResolver.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
         btnResolver.disabled = true;
+        alertaResultados.classList.add('d-none'); // Ocultar alerta vieja
 
         try {
-            // 2. Hacer la petición al backend (Flask)
             const respuesta = await fetch('/api/resolver', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -30,52 +28,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const datos = await respuesta.json();
 
-            // 3. Mostrar Resultados
-            cajaResultados.classList.remove('oculto');
+            // Configurar alerta de Bootstrap según el resultado
+            alertaResultados.className = "alert mt-3 text-center"; // Resetear clases
             if (datos.exito) {
-                textoEstado.innerHTML = "✅ <b>¡Solución Óptima Encontrada!</b>";
-                textoEstado.style.color = "#2ecc71";
+                alertaResultados.classList.add('alert-success');
+                textoEstado.innerHTML = "✅ Solución Óptima Encontrada";
             } else {
-                textoEstado.innerHTML = "⚠️ <b>Atascado en óptimo local.</b>";
-                textoEstado.style.color = "#e74c3c";
+                alertaResultados.classList.add('alert-warning');
+                textoEstado.innerHTML = "⚠️ Atascado en óptimo local";
             }
-            textoGeneraciones.innerText = `Generaciones: ${datos.generaciones}`;
+            
+            textoGeneraciones.innerText = `Resolución en ${datos.generaciones} generaciones.`;
+            alertaResultados.classList.remove('d-none');
 
-            // 4. ¡Dibujar el tablero!
+            // Dibujar la cuadrícula de forma estricta
             dibujarTablero(datos.solucion, n_reinas);
 
         } catch (error) {
-            alert("Error al comunicarse con el servidor.");
+            alert("Error al comunicarse con el motor de IA.");
             console.error(error);
         } finally {
-            // Restaurar botón
-            btnResolver.innerText = "🚀 Resolver con IA";
+            btnResolver.innerHTML = "🚀 Ejecutar IA";
             btnResolver.disabled = false;
         }
     });
 
-    // Función que pinta las celdas y las reinas basándose en tu vector
     function dibujarTablero(vectorSolucion, n) {
-        contenedorTablero.innerHTML = ''; // Limpiar tablero anterior
-        // Le decimos a CSS cuántas columnas usar
-        contenedorTablero.style.gridTemplateColumns = `repeat(${n}, 50px)`;
+        contenedorTablero.innerHTML = ''; 
+        
+        // ¡ESTO ES CLAVE PARA EL ERROR VISUAL!
+        // Le dice a CSS explícitamente cuántas columnas dibujar antes de pasar a la siguiente fila
+        contenedorTablero.style.gridTemplateColumns = `repeat(${n}, 45px)`;
+        contenedorTablero.style.gridTemplateRows = `repeat(${n}, 45px)`;
 
-        // Crear las celdas
         for (let fila = 0; fila < n; fila++) {
             for (let col = 0; col < n; col++) {
                 const celda = document.createElement('div');
                 celda.classList.add('celda');
 
-                // Alternar colores del tablero
                 if ((fila + col) % 2 === 0) {
                     celda.classList.add('blanca');
                 } else {
                     celda.classList.add('negra');
                 }
 
-                // Si en esta columna, el valor del vector indica esta fila, pintamos reina
+                // Colocamos la reina si la fila coincide con el valor del vector en esa columna
                 if (vectorSolucion[col] === fila) {
-                    celda.innerText = '♛';
+                    const reina = document.createElement('span');
+                    reina.innerText = '♛';
+                    reina.classList.add('reina-animada');
+                    celda.appendChild(reina);
                 }
 
                 contenedorTablero.appendChild(celda);

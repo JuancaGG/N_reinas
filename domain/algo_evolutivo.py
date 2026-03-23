@@ -98,6 +98,11 @@ class AlgoritmoEvolutivoNReinas:
         poblacion = self.inicializar_poblacion()
         historial_fitness = []
         
+        # Variables para controlar estancamiento
+        mejor_fitness_historico = float('inf')
+        paciencia = 0
+        LIMITE_PACIENCIA = 30 # Si pasa 30 generaciones sin mejorar, actuamos.
+        
         for generacion in range(self.max_generaciones):
             # Evaluar toda la poblacion y ordenarla
             poblacion.sort(key=self.calcular_aptitud)
@@ -114,6 +119,12 @@ class AlgoritmoEvolutivoNReinas:
                     "exito": True,
                     "historial": historial_fitness
                 }
+            # Revisamos si hay atasco
+            if mejor_fitness < mejor_fitness_historico:
+                mejor_fitness_historico = mejor_fitness 
+                paciencia = 0 # Mejora, reiniciamos
+            else: 
+                paciencia += 1 # No mejora, perdemos la paciencia  
                 
             # Nueva generacion
             nueva_poblacion = []
@@ -121,8 +132,8 @@ class AlgoritmoEvolutivoNReinas:
             nueva_poblacion.append(mejor_individuo)
             # Resto de la poblacion
             while len(nueva_poblacion) < self.tamaño_poblacion:
-                padre1 = self.seleccion_torneo(poblacion)
-                padre2 = self.seleccion_torneo(poblacion)
+                padre1 = self.seleccion_torneo(poblacion, k=2)
+                padre2 = self.seleccion_torneo(poblacion, k=2)
                 
                 hijo1, hijo2 = self.cruce(padre1,padre2)
                 
@@ -131,6 +142,13 @@ class AlgoritmoEvolutivoNReinas:
                 
                 nueva_poblacion.extend([hijo1, hijo2])
                 # Aseguramos que la población no se pase del tamaño exacto y reemplazamos
+            # Inyeccion de diversidad
+            if paciencia > LIMITE_PACIENCIA:
+                # Reemplazamos la segunda mitad de la poblacion con individuos aleatorios.
+                mitad = self.tamaño_poblacion // 2
+                for i in range(mitad, self.tamaño_poblacion):
+                    nueva_poblacion[i] = self.crear_individuo()
+                paciencia = 0 # Se inyecta la diversidad, reiniciamos el contador
             poblacion = nueva_poblacion[:self.tamaño_poblacion]
                 
         # Se acabaron la generaciones y no llego a 0
