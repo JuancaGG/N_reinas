@@ -4,6 +4,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const alertaResultados = document.getElementById('alerta-resultados');
     const textoEstado = document.getElementById('texto-estado');
     const textoGeneraciones = document.getElementById('texto-generaciones');
+    const panelGrafica = document.getElementById('panel-grafica'); // El nuevo panel
+    
+    // Variable para guardar la gráfica y poder borrarla si ejecutamos de nuevo
+    let miGrafica = null; 
 
     btnResolver.addEventListener('click', async () => {
         const n_reinas = parseInt(document.getElementById('n_reinas').value);
@@ -12,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         btnResolver.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
         btnResolver.disabled = true;
-        alertaResultados.classList.add('d-none'); // Ocultar alerta vieja
+        alertaResultados.classList.add('d-none');
 
         try {
             const respuesta = await fetch('/api/resolver', {
@@ -28,21 +32,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const datos = await respuesta.json();
 
-            // Configurar alerta de Bootstrap según el resultado
-            alertaResultados.className = "alert mt-3 text-center"; // Resetear clases
+            // Alerta de Bootstrap
+            alertaResultados.className = "alert mt-3 text-center"; 
             if (datos.exito) {
                 alertaResultados.classList.add('alert-success');
-                textoEstado.innerHTML = "✅ Solución Óptima Encontrada";
+                textoEstado.innerHTML = "✅ Solución optima encontrada";
             } else {
                 alertaResultados.classList.add('alert-warning');
                 textoEstado.innerHTML = "⚠️ Atascado en óptimo local";
             }
-            
             textoGeneraciones.innerText = `Resolución en ${datos.generaciones} generaciones.`;
             alertaResultados.classList.remove('d-none');
 
-            // Dibujar la cuadrícula de forma estricta
+            // Dibujar la cuadrícula
             dibujarTablero(datos.solucion, n_reinas);
+            
+            // Grafica nueva
+            dibujarGrafica(datos.historial);
 
         } catch (error) {
             alert("Error al comunicarse con el motor de IA.");
@@ -55,9 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function dibujarTablero(vectorSolucion, n) {
         contenedorTablero.innerHTML = ''; 
-        
-        // ¡ESTO ES CLAVE PARA EL ERROR VISUAL!
-        // Le dice a CSS explícitamente cuántas columnas dibujar antes de pasar a la siguiente fila
         contenedorTablero.style.gridTemplateColumns = `repeat(${n}, 45px)`;
         contenedorTablero.style.gridTemplateRows = `repeat(${n}, 45px)`;
 
@@ -72,7 +75,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     celda.classList.add('negra');
                 }
 
-                // Colocamos la reina si la fila coincide con el valor del vector en esa columna
                 if (vectorSolucion[col] === fila) {
                     const reina = document.createElement('span');
                     reina.innerText = '♛';
@@ -83,5 +85,57 @@ document.addEventListener("DOMContentLoaded", () => {
                 contenedorTablero.appendChild(celda);
             }
         }
+    }
+
+    // Nueva funcion para la grafica
+    function dibujarGrafica(historial) {
+
+        panelGrafica.classList.remove('d-none');
+        
+        const ctx = document.getElementById('graficaConvergencia').getContext('2d');
+        
+        // Si ya existía una gráfica de una ejecución anterior, la destruimos para no encimarlas
+        if (miGrafica) {
+            miGrafica.destroy();
+        }
+
+        // Creamos un arreglo de números [1, 2, 3...] para el eje X (Las Generaciones)
+        const etiquetasGeneraciones = Array.from({length: historial.length}, (_, i) => i + 1);
+
+        miGrafica = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: etiquetasGeneraciones,
+                datasets: [{
+                    label: 'Conflictos (Fitness - meta: 0)',
+                    data: historial,
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: true,
+                    tension: 0.1 
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Generaciones', color: '#adb5bd' },
+                        ticks: { color: '#adb5bd' },
+                        grid: { color: '#343a40' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Número de Conflictos', color: '#adb5bd' },
+                        ticks: { color: '#adb5bd' },
+                        grid: { color: '#343a40' },
+                        min: 0 
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#f8f9fa' } }
+                }
+            }
+        });
     }
 });
